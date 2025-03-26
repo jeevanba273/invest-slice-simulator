@@ -11,8 +11,11 @@ import { useToast } from '@/hooks/use-toast';
 const Index = () => {
   const [simulationParams, setSimulationParams] = useState<{
     investmentAmount: number;
+    dcaAmount?: number;
     frequency: FrequencyType;
     strategyType: StrategyType;
+    startDate: Date;
+    endDate: Date;
   } | null>(null);
   
   const { result, loading, error, runSimulationWithParams } = useSimulation();
@@ -20,8 +23,11 @@ const Index = () => {
   
   const handleFormSubmit = (params: {
     investmentAmount: number;
+    dcaAmount?: number;
     frequency: FrequencyType;
     strategyType: StrategyType;
+    startDate: Date;
+    endDate: Date;
   }) => {
     setSimulationParams(params);
     runSimulationWithParams(params);
@@ -67,6 +73,9 @@ const Index = () => {
                 strategyType={simulationParams.strategyType}
                 frequency={simulationParams.frequency}
                 investmentAmount={simulationParams.investmentAmount}
+                dcaAmount={simulationParams.dcaAmount}
+                startDate={simulationParams.startDate}
+                endDate={simulationParams.endDate}
               />
             </div>
           )}
