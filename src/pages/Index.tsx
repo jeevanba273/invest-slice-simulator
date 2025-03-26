@@ -56,7 +56,7 @@ const Index = () => {
             <span className="inline-block py-1 px-3 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4">
               Investment Simulator
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">
               Compare Investment Strategies
             </h2>
             <p className="text-foreground/70">

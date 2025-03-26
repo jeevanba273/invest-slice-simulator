@@ -73,6 +73,11 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   
   const totalDCAInvestment = dcaAmount * totalInvestmentPeriods;
   
+  // Calculate ROI values for comparison
+  const lumpSumROI = result.lumpSum.finalValue / investmentAmount;
+  const dcaROI = result.dca.finalValue / totalDCAInvestment;
+  const roiDifference = lumpSumROI - dcaROI;
+  
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
@@ -152,13 +157,17 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         )}
         
         {/* DCA Metrics */}
-        {showDCA && !showLumpSum && (
+        {showDCA && (
           <>
             <MetricsCard
               title="DCA Final Value"
               value={result.dca.finalValue}
               format="currency"
               isVisible={isVisible}
+              comparison={showLumpSum ? {
+                value: result.lumpSum.finalValue,
+                label: "Lump Sum"
+              } : undefined}
             />
             
             <MetricsCard
@@ -166,6 +175,10 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               value={result.dca.cagr}
               format="percentage"
               isVisible={isVisible}
+              comparison={showLumpSum ? {
+                value: result.lumpSum.cagr,
+                label: "Lump Sum"
+              } : undefined}
             />
             
             <MetricsCard
@@ -174,6 +187,10 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               format="number"
               subtitle="units"
               isVisible={isVisible}
+              comparison={showLumpSum ? {
+                value: result.lumpSum.totalUnits,
+                label: "Lump Sum"
+              } : undefined}
             />
           </>
         )}
@@ -191,7 +208,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         {showLumpSum && showDCA && (
           <MetricsCard
             title="ROI Difference"
-            value={(result.lumpSum.finalValue / investmentAmount) - (result.dca.finalValue / totalDCAInvestment)}
+            value={roiDifference}
             format="number"
             subtitle="x"
             isVisible={isVisible}
@@ -237,8 +254,8 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               <li className="flex items-start">
                 <span className="text-primary mr-2">•</span>
                 <span>
-                  The Lump Sum strategy purchased <strong>{result.lumpSum.totalUnits.toFixed(2)}</strong> units, 
-                  while DCA accumulated <strong>{result.dca.totalUnits.toFixed(2)}</strong> units over time.
+                  The Lump Sum strategy purchased <strong>{result.lumpSum.totalUnits.toFixed(2)}</strong> units at {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(result.data[0].close)} per unit, 
+                  while DCA accumulated <strong>{result.dca.totalUnits.toFixed(2)}</strong> units over time at various price points.
                 </span>
               </li>
             </>
@@ -246,7 +263,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
           <li className="flex items-start">
             <span className="text-primary mr-2">•</span>
             <span>
-              {showLumpSum && `Lump Sum investing produced a CAGR of ${result.lumpSum.cagr.toFixed(2)}%, `}
+              {showLumpSum && `Lump Sum investing produced a CAGR of ${result.lumpSum.cagr.toFixed(2)}% `}
               {showLumpSum && showDCA && 'while '}
               {showDCA && `DCA produced a CAGR of ${result.dca.cagr.toFixed(2)}%.`}
             </span>
@@ -256,6 +273,18 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
             <span>
               {showDCA && `With ${frequency} investments of ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(dcaAmount)}, DCA spreads out risk over time, potentially reducing the impact of market volatility.`}
               {showLumpSum && `Lump Sum investing benefits more when markets trend upward over long periods.`}
+            </span>
+          </li>
+          <li className="flex items-start">
+            <span className="text-primary mr-2">•</span>
+            <span>
+              CAGR (Compound Annual Growth Rate) represents the annual rate of return that would give you the same final result over the time period. It is useful for comparing investments over different time periods.
+            </span>
+          </li>
+          <li className="flex items-start">
+            <span className="text-primary mr-2">•</span>
+            <span>
+              Units represent the number of shares or portions of the index that you own. For the NIFTY 50, this is a theoretical number as you typically invest through mutual funds or ETFs tracking the index.
             </span>
           </li>
         </ul>
