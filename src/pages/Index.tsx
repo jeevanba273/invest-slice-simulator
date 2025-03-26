@@ -56,11 +56,11 @@ const Index = () => {
             <span className="inline-block py-1 px-3 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4">
               Investment Simulator
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
+            <h2 className="text-3xl md:text-4xl font-bold mb-8">
               Compare Investment Strategies
             </h2>
             <p className="text-foreground/70">
-              See how Lump Sum and Dollar-Cost Averaging strategies would have performed with historical NIFTY 50 data (2010-2025).
+              See how Lump Sum and Dollar-Cost Averaging strategies would have performed with historical NIFTY 50 data.
             </p>
           </div>
           
@@ -88,7 +88,7 @@ const Index = () => {
             <span className="inline-block py-1 px-3 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4">
               About
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold mb-8">
               Understanding Investment Strategies
             </h2>
             <p className="text-foreground/70">

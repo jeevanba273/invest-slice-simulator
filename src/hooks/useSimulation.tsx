@@ -7,7 +7,7 @@ export type StrategyType = 'lumpSum' | 'dca' | 'both';
 
 interface SimulationParams {
   investmentAmount: number;
-  dcaAmount?: number; // New parameter for the periodic DCA investment amount
+  dcaAmount?: number;
   frequency: FrequencyType;
   strategyType: StrategyType;
   startDate: Date;
@@ -47,23 +47,22 @@ export const useSimulation = (): UseSimulationReturn => {
         throw new Error('Start date must be before end date');
       }
       
-      // Run simulation (with artificial delay to show loading state)
-      setTimeout(() => {
-        try {
-          const simulationResult = runSimulation(
-            params.investmentAmount,
-            params.dcaAmount || 0,
-            params.frequency,
-            params.startDate,
-            params.endDate
-          );
+      // Run simulation with real data
+      runSimulation(
+        params.investmentAmount,
+        params.dcaAmount || 0,
+        params.frequency,
+        params.startDate,
+        params.endDate
+      )
+        .then(simulationResult => {
           setResult(simulationResult);
           setLoading(false);
-        } catch (err) {
+        })
+        .catch(err => {
           setError(err instanceof Error ? err.message : 'An error occurred while running the simulation');
           setLoading(false);
-        }
-      }, 1500);
+        });
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');

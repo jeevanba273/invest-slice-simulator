@@ -1,4 +1,6 @@
 // Data types
+import { fetchHistoricalData, getSimulatedHistoricalData } from '@/services/yahooFinanceService';
+
 export interface DataPoint {
   date: Date;
   close: number;
@@ -21,38 +23,9 @@ export interface SimulationResult {
   };
 }
 
-// Mock historical data for NIFTY 50 (^NSEI)
-// In a real implementation, this would be fetched from an API
-const generateMockHistoricalData = (startDate: Date, endDate: Date): DataPoint[] => {
-  const data: DataPoint[] = [];
-  
-  // Generate daily data points (excluding weekends for simplicity)
-  let currentDate = new Date(startDate);
-  let price = 5000; // Starting price around Jan 2010
-  
-  while (currentDate <= endDate) {
-    // Skip weekends
-    if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
-      // Random daily change between -1.5% and 1.5% with slight upward bias
-      // to achieve approximately 12% CAGR over longer periods
-      const dailyChange = (Math.random() * 3 - 1.3) / 100;
-      price = price * (1 + dailyChange);
-      
-      data.push({
-        date: new Date(currentDate),
-        close: parseFloat(price.toFixed(2))
-      });
-    }
-    
-    // Move to next day
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-  
-  return data;
-};
-
 // Calculate CAGR (Compound Annual Growth Rate)
 const calculateCAGR = (initialValue: number, finalValue: number, years: number): number => {
+  if (years <= 0 || initialValue <= 0 || finalValue <= 0) return 0;
   return (Math.pow(finalValue / initialValue, 1 / years) - 1) * 100;
 };
 
@@ -138,7 +111,7 @@ const simulateDCA = (
 };
 
 // Helper function to get investment dates
-function investmentDates(data: DataPoint[], frequency: 'monthly' | 'quarterly' | 'yearly'): DataPoint[] {
+function getInvestmentDates(data: DataPoint[], frequency: 'monthly' | 'quarterly' | 'yearly'): DataPoint[] {
   // Determine investment intervals based on frequency
   let interval: number;
   if (frequency === 'monthly') interval = 1;
@@ -175,59 +148,69 @@ function investmentDates(data: DataPoint[], frequency: 'monthly' | 'quarterly' |
 }
 
 // Main simulation function
-export const runSimulation = (
+export const runSimulation = async (
   lumpSumAmount: number,
   dcaAmount: number,
   frequency: 'monthly' | 'quarterly' | 'yearly',
   startDate: Date,
   endDate: Date
-): SimulationResult => {
-  // Get historical data (mock for now)
-  let data = generateMockHistoricalData(startDate, endDate);
-  
-  // Run Lump Sum simulation
-  data = simulateLumpSum(data, lumpSumAmount);
-  
-  // Run DCA simulation
-  data = simulateDCA(data, dcaAmount, frequency);
-  
-  // Calculate performance metrics
-  const initialLumpSumValue = lumpSumAmount;
-  // DCA doesn't have a single initial value since it's invested over time
-  
-  const years = (data[data.length - 1].date.getTime() - data[0].date.getTime()) / (1000 * 60 * 60 * 24 * 365);
-  
-  const lumpSumFinalValue = data[data.length - 1].lumpSumValue || 0;
-  const dcaFinalValue = data[data.length - 1].dcaValue || 0;
-  
-  const lumpSumCAGR = calculateCAGR(initialLumpSumValue, lumpSumFinalValue, years);
-  
-  // For DCA CAGR, we need to calculate the total amount invested
-  const totalInvestments = investmentDates(data, frequency).length;
-  const totalDCAInvestment = dcaAmount * totalInvestments;
-  
-  // Calculate the weighted average time of investment for DCA
-  // Simple approximation: assuming investments are evenly distributed over time
-  const dcaWeightedYears = years / 2;
-  const dcaCAGR = calculateCAGR(totalDCAInvestment, dcaFinalValue, dcaWeightedYears);
-  
-  const lumpSumUnits = lumpSumAmount / data[0].close;
-  
-  // Calculate total DCA units (sum of all periodic purchases)
-  const dcaUnits = data[data.length - 1].dcaValue! / data[data.length - 1].close;
-  
-  return {
-    data,
-    lumpSum: {
-      finalValue: lumpSumFinalValue,
-      totalUnits: lumpSumUnits,
-      cagr: lumpSumCAGR
-    },
-    dca: {
-      finalValue: dcaFinalValue,
-      totalUnits: dcaUnits,
-      cagr: dcaCAGR,
-      periodicAmount: dcaAmount
+): Promise<SimulationResult> => {
+  try {
+    // Attempt to get historical data from Yahoo Finance API
+    let data = await fetchHistoricalData("^NSEI", startDate, endDate);
+    console.log(`Fetched ${data.length} data points from Yahoo Finance API`);
+    
+    // If API returns insufficient data, use simulated data with consistent seed
+    if (data.length < 10) {
+      console.warn("Insufficient data from API, using simulated data");
+      data = getSimulatedHistoricalData(startDate, endDate);
     }
-  };
+    
+    // Run Lump Sum simulation
+    let simulatedData = simulateLumpSum(data, lumpSumAmount);
+    
+    // Run DCA simulation
+    simulatedData = simulateDCA(simulatedData, dcaAmount, frequency);
+    
+    // Calculate performance metrics
+    const initialLumpSumValue = lumpSumAmount;
+    
+    const years = (simulatedData[simulatedData.length - 1].date.getTime() - simulatedData[0].date.getTime()) / (1000 * 60 * 60 * 24 * 365);
+    
+    const lumpSumFinalValue = simulatedData[simulatedData.length - 1].lumpSumValue || 0;
+    const dcaFinalValue = simulatedData[simulatedData.length - 1].dcaValue || 0;
+    
+    const lumpSumCAGR = calculateCAGR(initialLumpSumValue, lumpSumFinalValue, years);
+    
+    // For DCA, calculate the total amount invested
+    const investmentDates = getInvestmentDates(simulatedData, frequency);
+    const totalInvestments = investmentDates.length;
+    const totalDCAInvestment = dcaAmount * totalInvestments;
+    
+    // Calculate proper CAGR for DCA using total amount invested
+    const dcaCAGR = calculateCAGR(totalDCAInvestment, dcaFinalValue, years);
+    
+    const lumpSumUnits = lumpSumAmount / simulatedData[0].close;
+    
+    // Calculate total DCA units based on final value and closing price
+    const dcaUnits = simulatedData[simulatedData.length - 1].dcaValue! / simulatedData[simulatedData.length - 1].close;
+    
+    return {
+      data: simulatedData,
+      lumpSum: {
+        finalValue: lumpSumFinalValue,
+        totalUnits: lumpSumUnits,
+        cagr: lumpSumCAGR
+      },
+      dca: {
+        finalValue: dcaFinalValue,
+        totalUnits: dcaUnits,
+        cagr: dcaCAGR,
+        periodicAmount: dcaAmount
+      }
+    };
+  } catch (error) {
+    console.error("Error in simulation:", error);
+    throw new Error("Failed to run simulation. Please try again.");
+  }
 };

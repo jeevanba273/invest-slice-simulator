@@ -74,8 +74,8 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   const totalDCAInvestment = dcaAmount * totalInvestmentPeriods;
   
   // Calculate ROI values for comparison
-  const lumpSumROI = result.lumpSum.finalValue / investmentAmount;
-  const dcaROI = result.dca.finalValue / totalDCAInvestment;
+  const lumpSumROI = investmentAmount > 0 ? result.lumpSum.finalValue / investmentAmount : 0;
+  const dcaROI = totalDCAInvestment > 0 ? result.dca.finalValue / totalDCAInvestment : 0;
   const roiDifference = lumpSumROI - dcaROI;
   
   return (
@@ -202,6 +202,10 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
             value={totalDCAInvestment}
             format="currency"
             isVisible={isVisible}
+            comparison={showLumpSum ? {
+              value: investmentAmount,
+              label: "Lump Sum"
+            } : undefined}
           />
         )}
         
@@ -278,13 +282,19 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
           <li className="flex items-start">
             <span className="text-primary mr-2">•</span>
             <span>
-              CAGR (Compound Annual Growth Rate) represents the annual rate of return that would give you the same final result over the time period. It is useful for comparing investments over different time periods.
+              <strong>CAGR</strong> (Compound Annual Growth Rate) represents the annual rate of return that would give you the same final result over the time period. It's calculated as (Final Value / Initial Value)^(1/Years) - 1, expressed as a percentage.
             </span>
           </li>
           <li className="flex items-start">
             <span className="text-primary mr-2">•</span>
             <span>
-              Units represent the number of shares or portions of the index that you own. For the NIFTY 50, this is a theoretical number as you typically invest through mutual funds or ETFs tracking the index.
+              <strong>Units</strong> represent the number of shares or portions of the index that you own. For the NIFTY 50, this is a theoretical number as you typically invest through mutual funds or ETFs tracking the index.
+            </span>
+          </li>
+          <li className="flex items-start">
+            <span className="text-primary mr-2">•</span>
+            <span>
+              <strong>ROI Difference</strong> compares the return on investment multiple between strategies. It shows how many times more or less one strategy returned compared to the other.
             </span>
           </li>
         </ul>
