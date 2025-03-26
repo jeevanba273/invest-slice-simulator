@@ -4,19 +4,26 @@ import ComparisonChart from './ComparisonChart';
 import MetricsCard from './MetricsCard';
 import { SimulationResult } from '@/utils/simulationUtils';
 import { FrequencyType, StrategyType } from '@/hooks/useSimulation';
+import { format } from 'date-fns';
 
 interface ResultsDisplayProps {
   result: SimulationResult;
   strategyType: StrategyType;
   frequency: FrequencyType;
   investmentAmount: number;
+  dcaAmount?: number;
+  startDate: Date;
+  endDate: Date;
 }
 
 const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ 
   result, 
   strategyType,
   frequency,
-  investmentAmount
+  investmentAmount,
+  dcaAmount = 0,
+  startDate,
+  endDate
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [activeTimeframe, setActiveTimeframe] = useState('full'); // 'full', '5y', '1y'
@@ -58,6 +65,14 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   
   const filteredData = getFilteredData();
   
+  // Calculate total DCA investment
+  const totalInvestmentPeriods = Math.floor(
+    (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
+    (endDate.getMonth() - startDate.getMonth())
+  ) / (frequency === 'monthly' ? 1 : frequency === 'quarterly' ? 3 : 12);
+  
+  const totalDCAInvestment = dcaAmount * totalInvestmentPeriods;
+  
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
@@ -80,6 +95,13 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
             </button>
           ))}
         </div>
+      </div>
+      
+      <div className="glass-card p-4 mb-2">
+        <p className="text-sm text-foreground/70">
+          Simulating from <strong>{format(startDate, "MMMM d, yyyy")}</strong> to <strong>{format(endDate, "MMMM d, yyyy")}</strong>
+          {showDCA && <> · {frequency} DCA of <strong>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(dcaAmount)}</strong></>}
+        </p>
       </div>
       
       <ComparisonChart 
@@ -156,13 +178,22 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
           </>
         )}
         
-        {/* Additional Comparison Metric */}
+        {/* Additional Comparison Metrics */}
+        {showDCA && (
+          <MetricsCard
+            title="Total DCA Investment"
+            value={totalDCAInvestment}
+            format="currency"
+            isVisible={isVisible}
+          />
+        )}
+        
         {showLumpSum && showDCA && (
           <MetricsCard
-            title={`${frequency.charAt(0).toUpperCase() + frequency.slice(1)} Installment Amount`}
-            value={investmentAmount / (frequency === 'monthly' ? 180 : frequency === 'quarterly' ? 60 : 15)}
-            format="currency"
-            subtitle={`per ${frequency.slice(0, -2)}${frequency === 'monthly' ? 'th' : ''}`}
+            title="ROI Difference"
+            value={(result.lumpSum.finalValue / investmentAmount) - (result.dca.finalValue / totalDCAInvestment)}
+            format="number"
+            subtitle="x"
             isVisible={isVisible}
           />
         )}
@@ -223,13 +254,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
           <li className="flex items-start">
             <span className="text-primary mr-2">•</span>
             <span>
-              The NIFTY 50 had an overall CAGR of approximately 12% during this 15-year period.
-            </span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-primary mr-2">•</span>
-            <span>
-              {showDCA && `With ${frequency} investments, DCA spreads out risk over time, potentially reducing the impact of market volatility.`}
+              {showDCA && `With ${frequency} investments of ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(dcaAmount)}, DCA spreads out risk over time, potentially reducing the impact of market volatility.`}
               {showLumpSum && `Lump Sum investing benefits more when markets trend upward over long periods.`}
             </span>
           </li>
