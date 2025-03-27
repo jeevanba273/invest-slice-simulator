@@ -50,11 +50,11 @@ const Hero = () => {
             </span>
           </div>
           
-          <h1 className="hero-text-gradient text-4xl sm:text-5xl md:text-6xl font-bold mb-8 animate-fade-in animate-delay-100">
+          <h1 className="hero-text-gradient text-4xl sm:text-5xl md:text-6xl font-bold mb-8 animate-fade-in animate-delay-100" style={{ paddingBottom: "2px" }}>
             Compare Investment Strategies With Precision
           </h1>
           
-          <p className="text-foreground/70 text-lg md:text-xl max-w-2xl mx-auto mb-10 animate-fade-in animate-delay-200">
+          <p className="text-foreground/70 text-lg md:text-xl max-w-2xl mx-auto mb-10 mt-8 animate-fade-in animate-delay-200">
             Analyze Lump Sum vs Dollar-Cost Averaging using historical NIFTY 50 data, visualize performance, and make informed investment decisions.
           </p>
           

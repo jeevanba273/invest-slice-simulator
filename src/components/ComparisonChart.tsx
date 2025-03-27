@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { DataPoint } from '@/utils/simulationUtils';
 
@@ -32,13 +33,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
     dcaValue: ''
   });
   
-  const [cursorPosition, setCursorPosition] = useState<{
-    visible: boolean;
-    x: number;
-  }>({
-    visible: false,
-    x: 0
-  });
+  // Removing cursorPosition state since we're removing the vertical line
   
   const drawChart = () => {
     const canvas = canvasRef.current;
@@ -193,16 +188,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
       ctx.stroke();
     }
     
-    if (cursorPosition.visible) {
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([5, 3]);
-      ctx.beginPath();
-      ctx.moveTo(cursorPosition.x, chartTop);
-      ctx.lineTo(cursorPosition.x, chartTop + chartHeight);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
+    // Removed the cursor position vertical line drawing code
     
     const chartDimensions = {
       left: chartLeft,
@@ -219,10 +205,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
       if (x >= chartLeft && x <= chartLeft + chartWidth &&
           y >= chartTop && y <= chartTop + chartHeight) {
         
-        setCursorPosition({
-          visible: true,
-          x: x
-        });
+        // We're no longer updating the cursor position state
         
         let minDistance = Infinity;
         let closestIndex = -1;
@@ -262,19 +245,13 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
           });
         }
       } else {
-        setCursorPosition({
-          visible: false,
-          x: 0
-        });
+        // No need to update cursor position anymore
         setTooltipData({ ...tooltipData, visible: false });
       }
     };
     
     canvas.onmouseleave = () => {
-      setCursorPosition({
-        visible: false,
-        x: 0
-      });
+      // No need to update cursor position anymore
       setTooltipData({ ...tooltipData, visible: false });
     };
     
@@ -330,7 +307,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
       const timer = setTimeout(drawChart, 500);
       return () => clearTimeout(timer);
     }
-  }, [data, lumpSumEnabled, dcaEnabled, isVisible, cursorPosition.visible]);
+  }, [data, lumpSumEnabled, dcaEnabled, isVisible]);
   
   useEffect(() => {
     const handleResize = () => drawChart();
