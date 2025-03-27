@@ -50,7 +50,7 @@ const Hero = () => {
             </span>
           </div>
           
-          <h1 className="hero-text-gradient text-4xl sm:text-5xl md:text-6xl font-bold mb-6 animate-fade-in animate-delay-100">
+          <h1 className="hero-text-gradient text-4xl sm:text-5xl md:text-6xl font-bold mb-8 animate-fade-in animate-delay-100">
             Compare Investment Strategies With Precision
           </h1>
           
