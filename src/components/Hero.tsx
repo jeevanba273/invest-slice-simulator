@@ -50,7 +50,7 @@ const Hero = () => {
             </span>
           </div>
           
-          <h1 className="hero-text-gradient text-4xl sm:text-5xl md:text-6xl font-bold mb-8 animate-fade-in animate-delay-100" style={{ paddingBottom: "2px" }}>
+          <h1 className="hero-text-gradient text-4xl sm:text-5xl md:text-6xl font-bold mb-8 animate-fade-in animate-delay-100" style={{ lineHeight: "1.2", paddingBottom: "8px" }}>
             Compare Investment Strategies With Precision
           </h1>
           
