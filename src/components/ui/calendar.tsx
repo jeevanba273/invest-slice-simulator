@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker, DropdownNav } from "react-day-picker";
+import { DayPicker } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -54,8 +54,8 @@ function Calendar({
   // Custom dropdown navigation
   const CustomDropdownNav: React.FC<{
     displayedMonth: Date;
-    onMonthChange: (date: Date) => void;
-  }> = ({ displayedMonth, onMonthChange }) => {
+    onMonthChange?: (date: Date) => void;
+  }> = ({ displayedMonth }) => {
     const years = Array.from({ length: 50 }, (_, i) => (
       new Date().getFullYear() - 25 + i
     ));
@@ -143,12 +143,9 @@ function Calendar({
       components={{
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
-        Caption: ({ displayMonth, currencyMonth, ...captionProps }) => (
+        Caption: () => (
           <CustomDropdownNav 
-            displayedMonth={displayMonth} 
-            onMonthChange={(date) => {
-              captionProps.onMonthChange?.(date);
-            }} 
+            displayedMonth={new Date(year, month)}
           />
         ),
       }}
