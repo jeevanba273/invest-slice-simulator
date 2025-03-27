@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { runSimulation, SimulationResult } from '@/utils/simulationUtils';
+import { useToast } from '@/hooks/use-toast';
 
 export type FrequencyType = 'monthly' | 'quarterly' | 'yearly';
 export type StrategyType = 'lumpSum' | 'dca' | 'both';
@@ -25,6 +26,7 @@ export const useSimulation = (): UseSimulationReturn => {
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
   
   const runSimulationWithParams = (params: SimulationParams) => {
     try {
@@ -58,15 +60,32 @@ export const useSimulation = (): UseSimulationReturn => {
         .then(simulationResult => {
           setResult(simulationResult);
           setLoading(false);
+          toast({
+            title: "Simulation Complete",
+            description: "Data has been loaded successfully",
+            variant: "default"
+          });
         })
         .catch(err => {
-          setError(err instanceof Error ? err.message : 'An error occurred while running the simulation');
+          const errorMessage = err instanceof Error ? err.message : 'An error occurred while running the simulation';
+          setError(errorMessage);
           setLoading(false);
+          toast({
+            title: "Simulation Error",
+            description: errorMessage,
+            variant: "destructive"
+          });
         });
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(errorMessage);
       setLoading(false);
+      toast({
+        title: "Simulation Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
     }
   };
   

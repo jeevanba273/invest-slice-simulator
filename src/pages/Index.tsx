@@ -7,6 +7,8 @@ import ResultsDisplay from '@/components/ResultsDisplay';
 import { useSimulation, FrequencyType, StrategyType } from '@/hooks/useSimulation';
 import { SimulationResult } from '@/utils/simulationUtils';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const Index = () => {
   const [simulationParams, setSimulationParams] = useState<{
@@ -59,10 +61,20 @@ const Index = () => {
             <h2 className="text-3xl md:text-4xl font-bold mb-8">
               Compare Investment Strategies
             </h2>
-            <p className="text-foreground/70">
+            <p className="text-foreground/70 mt-4">
               See how Lump Sum and Dollar-Cost Averaging strategies would have performed with historical NIFTY 50 data.
             </p>
           </div>
+          
+          {error && (
+            <Alert variant="destructive" className="mb-6 max-w-2xl mx-auto">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {error}. The simulation will use simulated data instead.
+              </AlertDescription>
+            </Alert>
+          )}
           
           <SimulationForm onSubmit={handleFormSubmit} loading={loading} />
           
