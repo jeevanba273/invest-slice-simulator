@@ -158,56 +158,56 @@ export const runSimulation = async (
 ): Promise<SimulationResult> => {
   try {
     // Always get simulated data first so we have a fallback
-    const simulatedData = getSimulatedHistoricalData(startDate, endDate);
-    console.log(`Generated ${simulatedData.length} simulated data points as fallback`);
+    const fallbackData = getSimulatedHistoricalData(startDate, endDate);
+    console.log(`Generated ${fallbackData.length} simulated data points as fallback`);
     
     // Try to get real data from Yahoo Finance API
-    let data;
+    let marketData;
     try {
-      data = await fetchHistoricalData("^NSEI", startDate, endDate);
-      console.log(`Fetched ${data.length} data points from Yahoo Finance API`);
+      marketData = await fetchHistoricalData("^NSEI", startDate, endDate);
+      console.log(`Fetched ${marketData.length} data points from Yahoo Finance API`);
       
       // If API returns insufficient data, use simulated data with consistent seed
-      if (data.length < 10) {
+      if (marketData.length < 10) {
         console.warn("Insufficient data from API, using simulated data");
-        data = simulatedData;
+        marketData = fallbackData;
       }
     } catch (error) {
       console.warn("Failed to fetch real data, using simulated data", error);
-      data = simulatedData;
+      marketData = fallbackData;
     }
     
     // Run Lump Sum simulation
-    let simulatedData = simulateLumpSum(data, lumpSumAmount);
+    let processedData = simulateLumpSum(marketData, lumpSumAmount);
     
     // Run DCA simulation
-    simulatedData = simulateDCA(simulatedData, dcaAmount, frequency);
+    processedData = simulateDCA(processedData, dcaAmount, frequency);
     
     // Calculate performance metrics
     const initialLumpSumValue = lumpSumAmount;
     
-    const years = (simulatedData[simulatedData.length - 1].date.getTime() - simulatedData[0].date.getTime()) / (1000 * 60 * 60 * 24 * 365);
+    const years = (processedData[processedData.length - 1].date.getTime() - processedData[0].date.getTime()) / (1000 * 60 * 60 * 24 * 365);
     
-    const lumpSumFinalValue = simulatedData[simulatedData.length - 1].lumpSumValue || 0;
-    const dcaFinalValue = simulatedData[simulatedData.length - 1].dcaValue || 0;
+    const lumpSumFinalValue = processedData[processedData.length - 1].lumpSumValue || 0;
+    const dcaFinalValue = processedData[processedData.length - 1].dcaValue || 0;
     
     const lumpSumCAGR = calculateCAGR(initialLumpSumValue, lumpSumFinalValue, years);
     
     // For DCA, calculate the total amount invested
-    const investmentDates = getInvestmentDates(simulatedData, frequency);
+    const investmentDates = getInvestmentDates(processedData, frequency);
     const totalInvestments = investmentDates.length;
     const totalDCAInvestment = dcaAmount * totalInvestments;
     
     // Calculate proper CAGR for DCA using total amount invested
     const dcaCAGR = calculateCAGR(totalDCAInvestment, dcaFinalValue, years);
     
-    const lumpSumUnits = lumpSumAmount / simulatedData[0].close;
+    const lumpSumUnits = lumpSumAmount / processedData[0].close;
     
     // Calculate total DCA units based on final value and closing price
-    const dcaUnits = dcaFinalValue / simulatedData[simulatedData.length - 1].close;
+    const dcaUnits = dcaFinalValue / processedData[processedData.length - 1].close;
     
     return {
-      data: simulatedData,
+      data: processedData,
       lumpSum: {
         finalValue: lumpSumFinalValue,
         totalUnits: lumpSumUnits,
@@ -224,24 +224,34 @@ export const runSimulation = async (
     console.error("Error in simulation:", error);
     
     // Even if everything fails, return simulated data so the app doesn't break
-    const simulatedData = getSimulatedHistoricalData(startDate, endDate);
-    const lumpSumSimulated = simulateLumpSum(simulatedData, lumpSumAmount);
+    const backupData = getSimulatedHistoricalData(startDate, endDate);
+    const lumpSumSimulated = simulateLumpSum(backupData, lumpSumAmount);
     const dcaSimulated = simulateDCA(lumpSumSimulated, dcaAmount, frequency);
     
     // Calculate some basic metrics from the simulated data
     const years = (dcaSimulated[dcaSimulated.length - 1].date.getTime() - dcaSimulated[0].date.getTime()) / (1000 * 60 * 60 * 24 * 365);
     
+    // Calculate proper CAGR for fallback data
+    const lumpSumFinalValue = dcaSimulated[dcaSimulated.length - 1].lumpSumValue || 0;
+    const dcaFinalValue = dcaSimulated[dcaSimulated.length - 1].dcaValue || 0;
+    const lumpSumCAGR = calculateCAGR(lumpSumAmount, lumpSumFinalValue, years);
+    
+    // For DCA in fallback, calculate approximate investment dates
+    const approxTotalInvestments = Math.floor(years * (frequency === 'monthly' ? 12 : frequency === 'quarterly' ? 4 : 1));
+    const totalDCAInvestment = dcaAmount * approxTotalInvestments;
+    const dcaCAGR = calculateCAGR(totalDCAInvestment, dcaFinalValue, years);
+    
     return {
       data: dcaSimulated,
       lumpSum: {
-        finalValue: dcaSimulated[dcaSimulated.length - 1].lumpSumValue || 0,
+        finalValue: lumpSumFinalValue,
         totalUnits: lumpSumAmount / dcaSimulated[0].close,
-        cagr: calculateCAGR(lumpSumAmount, dcaSimulated[dcaSimulated.length - 1].lumpSumValue || 0, years)
+        cagr: lumpSumCAGR
       },
       dca: {
-        finalValue: dcaSimulated[dcaSimulated.length - 1].dcaValue || 0,
-        totalUnits: (dcaSimulated[dcaSimulated.length - 1].dcaValue || 0) / dcaSimulated[dcaSimulated.length - 1].close,
-        cagr: 0, // Will be properly calculated below
+        finalValue: dcaFinalValue,
+        totalUnits: dcaFinalValue / dcaSimulated[dcaSimulated.length - 1].close,
+        cagr: dcaCAGR,
         periodicAmount: dcaAmount
       }
     };
