@@ -183,7 +183,7 @@ const Index = () => {
             </div>
             <div className="mt-8 pt-8 border-t border-border/30">
               <p className="text-xs text-foreground/50">
-                © {new Date().getFullYear()} InvestSlice. All historical data is simulated for educational purposes.
+                {new Date().getFullYear()} InvestSlice. All historical data is simulated for educational purposes.
               </p>
             </div>
           </div>
