@@ -1,69 +1,127 @@
-# Welcome to your Lovable project
+# InvestSlice Simulator
 
-## Project info
+[![Lovable App](https://img.shields.io/badge/Lovable-Deployed-success)](https://invest-slice-simulator.lovable.app/)
+[![GitHub stars](https://img.shields.io/github/stars/jeevanba273/invest-slice-simulator?style=social)](https://github.com/jeevanba273/invest-slice-simulator)
+![GitHub forks](https://img.shields.io/github/forks/jeevanba273/invest-slice-simulator?style=social)
+![GitHub last commit](https://img.shields.io/github/last-commit/jeevanba273/invest-slice-simulator)
+![GitHub repo size](https://img.shields.io/github/repo-size/jeevanba273/invest-slice-simulator?color=blue&style=flat-square)
 
-**URL**: https://lovable.dev/projects/f23a9f5f-dc7c-43d8-8301-a7185c68249b
+InvestSlice Simulator is an interactive web tool that **analyzes and compares investment strategies** using historical NIFTY 50 data. Whether you’re considering a one-time Lump Sum or a periodic Dollar-Cost Averaging (DCA) approach, this simulator helps you visualize and understand the potential outcomes over your selected time horizon.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## Table of Contents
+- [Overview](#overview)
+- [Features](#features)
+- [Demo](#demo)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Contributing](#contributing)
 
-**Use Lovable**
+---
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f23a9f5f-dc7c-43d8-8301-a7185c68249b) and start prompting.
+## Overview
 
-Changes made via Lovable will be committed automatically to this repo.
+InvestSlice Simulator empowers investors by offering a side-by-side comparison of different investment strategies:
+- **Lump Sum Investing:** Deploy your entire capital at once to maximize time in the market.
+- **Dollar-Cost Averaging (DCA):** Invest fixed amounts periodically to mitigate the effects of market volatility.
 
-**Use your preferred IDE**
+By visualizing historical performance, users can make informed decisions tailored to their risk tolerance, time horizon, and market outlook.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+---
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Features
 
-Follow these steps:
+- **Interactive Simulation:** Choose between Lump Sum, DCA, or compare both strategies.
+- **Customizable Parameters:** Configure investment amounts, frequency (monthly, quarterly, yearly), and simulation dates.
+- **Historical Data Analysis:** Leverage historical NIFTY 50 data to understand potential outcomes.
+- **Clear Visualizations:** Dynamic charts help illustrate performance trends over time.
+- **User-Friendly Interface:** A clean, intuitive design ensures a smooth user experience.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+---
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## Demo
 
-# Step 3: Install the necessary dependencies.
-npm i
+Check out the live demo at: [InvestSlice Simulator](https://invest-slice-simulator.lovable.app)
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+---
 
-**Edit a file directly in GitHub**
+## Installation
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+<details>
+  <summary>Click to view installation instructions</summary>
 
-**Use GitHub Codespaces**
+### Prerequisites
+- **Node.js & npm:** Ensure you have Node.js installed.
+- **Git:** For cloning the repository.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-## What technologies are used for this project?
+### Steps
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/jeevanba273/invest-slice-simulator.git
+2. **Navigate to the project directory:**
+   ```bash
+   cd invest-slice-simulator
+3. **Install Required Packages:**
+   ```bash
+   npm install
+4. **Start the development server:**
+    ```bash
+    npm start
+Open your browser and visit http://localhost:3000 to run the simulator.
+</details>
 
-This project is built with .
+---
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Usage
 
-## How can I deploy this project?
+<details>
+  <summary>Click to view usage instructions</summary>
 
-Simply open [Lovable](https://lovable.dev/projects/f23a9f5f-dc7c-43d8-8301-a7185c68249b) and click on Share -> Publish.
+**1. Select the Strategy Type**  
+- Choose **Lump Sum**, **Dollar-Cost Averaging (DCA)**, or **Compare Both**.
 
-## I want to use a custom domain - is that possible?
+**2. Configure Your Simulation**  
+- **Lump Sum Amount:** e.g., ₹1,00,000  
+- **DCA Amount Per Period:** e.g., ₹10,000 (monthly, quarterly, or yearly)  
+- **Investment Frequency:** Select from **Monthly**, **Quarterly**, or **Yearly**  
+- **Date Range:** Define the simulation period (e.g., January 1, 2010 to January 1, 2025)
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+**3. Start the Simulation**  
+- Click on **"Start Simulation"** to run and visualize the investment performance.
+
+**4. Analyze the Results**  
+- Review the visualized data to see how different strategies perform over time.
+
+</details>
+
+---
+
+##  Contributing
+<details> <summary>Click to view contributing guidelines</summary>
+Contributions are welcome! To contribute:
+
+1. **Fork the Repository**
+
+2. **Create a New Branch:**
+
+    ```bash
+    git checkout -b feature/your-feature
+
+3. **Commit Your Changes:**
+    
+    ```bash
+    git commit -m "Add new feature"
+   
+4. **Push to Your Branch:**
+    
+    ```bash
+    git push origin feature/your-feature
+
+5. Submit a Pull Request with a clear description of your changes.
+
+</details>
+
+
+    
