@@ -4,7 +4,6 @@
 [![GitHub stars](https://img.shields.io/github/stars/jeevanba273/invest-slice-simulator?style=social)](https://github.com/jeevanba273/invest-slice-simulator)
 ![GitHub forks](https://img.shields.io/github/forks/jeevanba273/invest-slice-simulator?style=social)
 ![GitHub last commit](https://img.shields.io/github/last-commit/jeevanba273/invest-slice-simulator)
-![GitHub repo size](https://img.shields.io/github/repo-size/jeevanba273/invest-slice-simulator?color=blue&style=flat-square)
 
 InvestSlice Simulator is an interactive web tool that **analyzes and compares investment strategies** using historical NIFTY 50 data. Whether you’re considering a one-time Lump Sum or a periodic Dollar-Cost Averaging (DCA) approach, this simulator helps you visualize and understand the potential outcomes over your selected time horizon.
 
