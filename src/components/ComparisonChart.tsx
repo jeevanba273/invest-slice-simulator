@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { DataPoint } from '@/utils/simulationUtils';
 
@@ -33,6 +32,14 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
     dcaValue: ''
   });
   
+  const [cursorPosition, setCursorPosition] = useState<{
+    visible: boolean;
+    x: number;
+  }>({
+    visible: false,
+    x: 0
+  });
+  
   const drawChart = () => {
     const canvas = canvasRef.current;
     if (!canvas || !containerRef.current) return;
@@ -40,7 +47,6 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    // Set canvas dimensions to match container
     const dpr = window.devicePixelRatio || 1;
     const rect = containerRef.current.getBoundingClientRect();
     canvas.width = rect.width * dpr;
@@ -50,12 +56,10 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
     canvas.style.width = `${rect.width}px`;
     canvas.style.height = `${rect.height}px`;
     
-    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     if (data.length === 0) return;
     
-    // Calculate min and max values for Y-axis
     let minValue = Infinity;
     let maxValue = -Infinity;
     
@@ -70,39 +74,32 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
       }
     });
     
-    // Add 10% padding to min and max values
     const padding = (maxValue - minValue) * 0.1;
     minValue = Math.max(0, minValue - padding);
     maxValue = maxValue + padding;
     
-    // Chart dimensions
-    const chartWidth = rect.width - 60; // Add padding for Y-axis labels
-    const chartHeight = rect.height - 40; // Add padding for X-axis labels
+    const chartWidth = rect.width - 60;
+    const chartHeight = rect.height - 40;
     const chartLeft = 50;
     const chartTop = 20;
     
-    // Function to convert data point to canvas coordinates
     const getX = (index: number) => chartLeft + (index / (data.length - 1)) * chartWidth;
     const getY = (value: number) => chartTop + chartHeight - ((value - minValue) / (maxValue - minValue)) * chartHeight;
     
-    // Draw axes
-    ctx.strokeStyle = '#d1d5db'; // gray-300
+    ctx.strokeStyle = '#d1d5db';
     ctx.lineWidth = 1;
     
-    // X-axis
     ctx.beginPath();
     ctx.moveTo(chartLeft, chartTop + chartHeight);
     ctx.lineTo(chartLeft + chartWidth, chartTop + chartHeight);
     ctx.stroke();
     
-    // Y-axis
     ctx.beginPath();
     ctx.moveTo(chartLeft, chartTop);
     ctx.lineTo(chartLeft, chartTop + chartHeight);
     ctx.stroke();
     
-    // Draw Y-axis labels
-    ctx.fillStyle = '#6b7280'; // gray-500
+    ctx.fillStyle = '#6b7280';
     ctx.font = '10px sans-serif';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
@@ -123,47 +120,39 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
         y
       );
       
-      // Draw horizontal grid line
-      ctx.strokeStyle = '#e5e7eb'; // gray-200
+      ctx.strokeStyle = '#e5e7eb';
       ctx.beginPath();
       ctx.moveTo(chartLeft, y);
       ctx.lineTo(chartLeft + chartWidth, y);
       ctx.stroke();
     }
     
-    // Draw X-axis labels (years only)
-    ctx.fillStyle = '#6b7280'; // gray-500
+    ctx.fillStyle = '#6b7280';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     
-    // Group data by year
     const years = new Set(data.map(point => point.date.getFullYear()));
     const yearArray = Array.from(years).sort();
     
-    // Draw year labels and vertical grid lines
     yearArray.forEach(year => {
       const index = data.findIndex(point => point.date.getFullYear() === year);
       if (index === -1) return;
       
       const x = getX(index);
       
-      // Draw label every 3 years to avoid crowding
       if (year % 3 === 0) {
         ctx.fillText(year.toString(), x, chartTop + chartHeight + 5);
       }
       
-      // Draw vertical grid line
-      ctx.strokeStyle = '#e5e7eb'; // gray-200
+      ctx.strokeStyle = '#e5e7eb';
       ctx.beginPath();
       ctx.moveTo(x, chartTop);
       ctx.lineTo(x, chartTop + chartHeight);
       ctx.stroke();
     });
     
-    // Draw data lines
     if (lumpSumEnabled) {
-      // Lump Sum line
-      ctx.strokeStyle = '#0066cc'; // blue
+      ctx.strokeStyle = '#0066cc';
       ctx.lineWidth = 2;
       ctx.beginPath();
       
@@ -184,8 +173,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
     }
     
     if (dcaEnabled) {
-      // DCA line
-      ctx.strokeStyle = '#e11d48'; // rose-600
+      ctx.strokeStyle = '#e11d48';
       ctx.lineWidth = 2;
       ctx.beginPath();
       
@@ -205,13 +193,96 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
       ctx.stroke();
     }
     
-    // Store the chart data for tooltip handling
+    if (cursorPosition.visible) {
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([5, 3]);
+      ctx.beginPath();
+      ctx.moveTo(cursorPosition.x, chartTop);
+      ctx.lineTo(cursorPosition.x, chartTop + chartHeight);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    
+    const chartDimensions = {
+      left: chartLeft,
+      top: chartTop,
+      width: chartWidth,
+      height: chartHeight
+    };
+    
+    canvas.onmousemove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      if (x >= chartLeft && x <= chartLeft + chartWidth &&
+          y >= chartTop && y <= chartTop + chartHeight) {
+        
+        setCursorPosition({
+          visible: true,
+          x: x
+        });
+        
+        let minDistance = Infinity;
+        let closestIndex = -1;
+        
+        data.forEach((point, index) => {
+          const pointX = getX(index);
+          const distance = Math.abs(pointX - x);
+          
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestIndex = index;
+          }
+        });
+        
+        if (closestIndex !== -1) {
+          const point = data[closestIndex];
+          setTooltipData({
+            visible: true,
+            x: getX(closestIndex),
+            y: Math.min(
+              getY(point.lumpSumValue || 0),
+              getY(point.dcaValue || 0)
+            ) - 10,
+            date: point.date.toLocaleDateString('en-IN', { 
+              year: 'numeric', 
+              month: 'short', 
+              day: 'numeric' 
+            }),
+            lumpSumValue: new Intl.NumberFormat('en-IN', { 
+              style: 'currency', 
+              currency: 'INR' 
+            }).format(point.lumpSumValue || 0),
+            dcaValue: new Intl.NumberFormat('en-IN', { 
+              style: 'currency', 
+              currency: 'INR' 
+            }).format(point.dcaValue || 0)
+          });
+        }
+      } else {
+        setCursorPosition({
+          visible: false,
+          x: 0
+        });
+        setTooltipData({ ...tooltipData, visible: false });
+      }
+    };
+    
+    canvas.onmouseleave = () => {
+      setCursorPosition({
+        visible: false,
+        x: 0
+      });
+      setTooltipData({ ...tooltipData, visible: false });
+    };
+    
     canvas.onclick = (e) => {
       const rect = canvas.getBoundingClientRect();
       const x = (e.clientX - rect.left) * dpr;
       const y = (e.clientY - rect.top) * dpr;
       
-      // Find the closest data point
       let minDistance = Infinity;
       let closestIndex = -1;
       
@@ -252,21 +323,15 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
         setTooltipData({ ...tooltipData, visible: false });
       }
     };
-    
-    canvas.onmouseleave = () => {
-      setTooltipData({ ...tooltipData, visible: false });
-    };
   };
   
-  // Draw chart whenever data or visibility changes
   useEffect(() => {
     if (isVisible) {
-      const timer = setTimeout(drawChart, 500); // Slight delay for animation
+      const timer = setTimeout(drawChart, 500);
       return () => clearTimeout(timer);
     }
-  }, [data, lumpSumEnabled, dcaEnabled, isVisible]);
+  }, [data, lumpSumEnabled, dcaEnabled, isVisible, cursorPosition.visible]);
   
-  // Redraw chart on window resize
   useEffect(() => {
     const handleResize = () => drawChart();
     window.addEventListener('resize', handleResize);
