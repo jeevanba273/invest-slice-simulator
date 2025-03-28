@@ -1,6 +1,6 @@
 # InvestSlice Simulator
 
-[![Netlify App](https://img.shields.io/badge/Netlify-Deployed-success)](https://invest-slice-simulator.netlify.app/)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/f64f1cea-3822-448e-85fa-13c278fbb225/deploy-status)](https://app.netlify.com/sites/invest-slice-simulator/deploys)
 ![GitHub last commit](https://img.shields.io/github/last-commit/jeevanba273/invest-slice-simulator)
 
 InvestSlice Simulator is an interactive web tool that **analyzes and compares investment strategies** using historical NIFTY 50 data. Whether you’re considering a one-time Lump Sum or a periodic Dollar-Cost Averaging (DCA) approach, this simulator helps you visualize and understand the potential outcomes over your selected time horizon.
