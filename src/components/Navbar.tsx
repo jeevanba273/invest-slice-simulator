@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import ThemeToggle from './ThemeToggle';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -52,12 +53,15 @@ const Navbar = () => {
           </a>
         </nav>
         
-        <a 
-          href="#simulation" 
-          className="button-primary hidden sm:block"
-        >
-          Start Simulation
-        </a>
+        <div className="flex items-center space-x-4">
+          <ThemeToggle />
+          <a 
+            href="#simulation" 
+            className="button-primary hidden sm:block"
+          >
+            Start Simulation
+          </a>
+        </div>
       </div>
     </header>
   );

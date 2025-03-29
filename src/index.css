@@ -27,6 +27,28 @@
     --radius: 1rem;
   }
   
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 212 100% 55%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 212 100% 55%;
+  }
+  
   html {
     scroll-behavior: smooth;
   }
@@ -40,7 +62,7 @@
 
 @layer components {
   .glass {
-    @apply backdrop-blur-xl bg-white/80 border border-white/20 shadow-sm;
+    @apply backdrop-blur-xl bg-white/80 border border-white/20 shadow-sm dark:bg-black/30 dark:border-white/10;
   }
   
   .glass-card {
@@ -72,12 +94,12 @@
   
   .card-container {
     @apply bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300
-    p-6 border border-border/50;
+    p-6 border border-border/50 dark:bg-secondary/30 dark:border-border/30;
   }
   
   .social-link {
     @apply inline-flex items-center justify-center p-2 rounded-full bg-white/80 shadow-sm 
-    hover:shadow-md transition-all duration-300;
+    hover:shadow-md transition-all duration-300 dark:bg-white/10 dark:hover:bg-white/20;
   }
   
   .animate-delay-100 {

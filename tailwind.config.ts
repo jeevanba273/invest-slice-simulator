@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -101,6 +100,15 @@ export default {
 				'pulse-soft': {
 					'0%, 100%': { opacity: '1' },
 					'50%': { opacity: '0.8' }
+				},
+				'theme-toggle': {
+					'0%': { transform: 'scale(0.95)' },
+					'50%': { transform: 'scale(1.05)' },
+					'100%': { transform: 'scale(1)' }
+				},
+				'icon-rotate': {
+					'0%': { transform: 'rotate(0deg)' },
+					'100%': { transform: 'rotate(360deg)' }
 				}
 			},
 			animation: {
@@ -111,7 +119,9 @@ export default {
 				'scale-in': 'scale-in 0.3s ease-out forwards',
 				'slide-in': 'slide-in 0.3s ease-out forwards',
 				'slide-up': 'slide-up 0.5s ease-out forwards',
-				'pulse-soft': 'pulse-soft 2s infinite ease-in-out'
+				'pulse-soft': 'pulse-soft 2s infinite ease-in-out',
+				'theme-toggle': 'theme-toggle 0.35s ease-in-out',
+				'icon-rotate': 'icon-rotate 1s ease-in-out'
 			}
 		}
 	},
