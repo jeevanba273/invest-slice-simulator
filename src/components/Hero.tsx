@@ -1,8 +1,10 @@
 
 import React, { useEffect, useRef } from 'react';
+import { useTheme } from './ThemeProvider';
 
 const Hero = () => {
   const heroRef = useRef<HTMLDivElement>(null);
+  const { theme } = useTheme();
   
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
@@ -32,14 +34,16 @@ const Hero = () => {
       ref={heroRef}
       className="min-h-screen relative flex items-center justify-center pt-16 overflow-hidden"
       style={{ 
-        backgroundImage: 'radial-gradient(circle at center, rgba(236, 240, 243, 0.8) 0%, rgba(250, 250, 252, 0.4) 100%)',
+        backgroundImage: theme === 'dark'
+          ? 'radial-gradient(circle at center, rgba(30, 30, 35, 0.8) 0%, rgba(15, 15, 20, 0.4) 100%)'
+          : 'radial-gradient(circle at center, rgba(236, 240, 243, 0.8) 0%, rgba(250, 250, 252, 0.4) 100%)',
         backgroundPosition: 'calc(50% + var(--x, 0)) calc(50% + var(--y, 0))',
       }}
     >
       {/* Abstract background elements */}
       <div className="absolute inset-0 overflow-hidden opacity-20">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-primary/10 filter blur-3xl animate-pulse-soft"></div>
-        <div className="absolute bottom-1/3 right-1/3 w-80 h-80 rounded-full bg-blue-200/20 filter blur-3xl animate-pulse-soft" style={{ animationDelay: '1s' }}></div>
+        <div className={`absolute top-1/4 left-1/4 w-64 h-64 rounded-full ${theme === 'dark' ? 'bg-primary/20' : 'bg-primary/10'} filter blur-3xl animate-pulse-soft`}></div>
+        <div className={`absolute bottom-1/3 right-1/3 w-80 h-80 rounded-full ${theme === 'dark' ? 'bg-blue-400/10' : 'bg-blue-200/20'} filter blur-3xl animate-pulse-soft`} style={{ animationDelay: '1s' }}></div>
       </div>
       
       <div className="section-container relative z-10">
