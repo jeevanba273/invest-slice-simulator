@@ -143,22 +143,22 @@ const Index = () => {
             </p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-center">
-              <div className="bg-white p-4 rounded-xl shadow-sm">
+              <div className="bg-card/80 dark:bg-secondary p-4 rounded-xl shadow-sm dark:text-foreground">
                 <h4 className="font-medium mb-2">Risk Tolerance</h4>
                 <p className="text-sm text-foreground/70">Consider your comfort with market volatility before choosing</p>
               </div>
               
-              <div className="bg-white p-4 rounded-xl shadow-sm">
+              <div className="bg-card/80 dark:bg-secondary p-4 rounded-xl shadow-sm dark:text-foreground">
                 <h4 className="font-medium mb-2">Time Horizon</h4>
                 <p className="text-sm text-foreground/70">Long-term investors may benefit differently than short-term</p>
               </div>
               
-              <div className="bg-white p-4 rounded-xl shadow-sm">
+              <div className="bg-card/80 dark:bg-secondary p-4 rounded-xl shadow-sm dark:text-foreground">
                 <h4 className="font-medium mb-2">Market Conditions</h4>
                 <p className="text-sm text-foreground/70">Bull markets favor different strategies than bear markets</p>
               </div>
               
-              <div className="bg-white p-4 rounded-xl shadow-sm">
+              <div className="bg-card/80 dark:bg-secondary p-4 rounded-xl shadow-sm dark:text-foreground">
                 <h4 className="font-medium mb-2">Personal Discipline</h4>
                 <p className="text-sm text-foreground/70">Consider which approach you'll stick with consistently</p>
               </div>
