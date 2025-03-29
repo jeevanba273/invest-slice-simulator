@@ -8,7 +8,7 @@ import { useSimulation, FrequencyType, StrategyType } from '@/hooks/useSimulatio
 import { SimulationResult } from '@/utils/simulationUtils';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Github, Linkedin } from "lucide-react";
 
 const Index = () => {
   const [simulationParams, setSimulationParams] = useState<{
@@ -176,12 +176,33 @@ const Index = () => {
             <p className="text-sm text-foreground/60 mb-6">
               A powerful investment strategy comparison tool for the Indian market
             </p>
-            <div className="flex justify-center space-x-6">
+            <div className="flex justify-center space-x-6 mb-6">
               <a href="#home" className="text-sm text-foreground/70 hover:text-foreground">Home</a>
               <a href="#simulation" className="text-sm text-foreground/70 hover:text-foreground">Simulation</a>
               <a href="#about" className="text-sm text-foreground/70 hover:text-foreground">About</a>
             </div>
-            <div className="mt-8 pt-8 border-t border-border/30">
+            
+            {/* Social Media Links */}
+            <div className="flex justify-center space-x-4 mb-6">
+              <a 
+                href="https://github.com/jeevanba273" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="social-link"
+              >
+                <Github className="h-6 w-6 text-foreground/70 hover:text-primary transition-all duration-300 transform hover:scale-110 hover:-translate-y-1" />
+              </a>
+              <a 
+                href="https://www.linkedin.com/in/jeevanba273/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="social-link"
+              >
+                <Linkedin className="h-6 w-6 text-foreground/70 hover:text-primary transition-all duration-300 transform hover:scale-110 hover:-translate-y-1" />
+              </a>
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-border/30">
               <p className="text-xs text-foreground/50">
                 {new Date().getFullYear()} InvestSlice. All historical data is simulated for educational purposes.
               </p>
