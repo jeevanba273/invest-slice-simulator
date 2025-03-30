@@ -6,6 +6,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 import {
   Popover,
   PopoverContent,
@@ -109,11 +110,11 @@ const SimulationForm: React.FC<SimulationFormProps> = ({ onSubmit, loading }) =>
               {strategyType === 'both' ? 'Lump Sum Amount (₹)' : 'Investment Amount (₹)'}
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/60">₹</span>
-              <input
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/60 z-10">₹</span>
+              <Input
                 id="investmentAmount"
                 type="number"
-                className="input-field pl-8"
+                className="pl-8"
                 value={investmentAmount}
                 onChange={(e) => setInvestmentAmount(Number(e.target.value))}
                 placeholder="100000"
@@ -135,11 +136,11 @@ const SimulationForm: React.FC<SimulationFormProps> = ({ onSubmit, loading }) =>
               DCA Amount Per Period (₹)
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/60">₹</span>
-              <input
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/60 z-10">₹</span>
+              <Input
                 id="dcaAmount"
                 type="number"
-                className="input-field pl-8"
+                className="pl-8"
                 value={dcaAmount}
                 onChange={(e) => setDcaAmount(Number(e.target.value))}
                 placeholder="10000"
@@ -189,7 +190,7 @@ const SimulationForm: React.FC<SimulationFormProps> = ({ onSubmit, loading }) =>
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className="input-field flex justify-between items-center w-full text-left"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm justify-between items-center"
               >
                 {format(startDate, "MMMM d, yyyy")}
                 <CalendarIcon className="h-4 w-4 opacity-50" />
@@ -217,7 +218,7 @@ const SimulationForm: React.FC<SimulationFormProps> = ({ onSubmit, loading }) =>
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className="input-field flex justify-between items-center w-full text-left"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm justify-between items-center"
               >
                 {format(endDate, "MMMM d, yyyy")}
                 <CalendarIcon className="h-4 w-4 opacity-50" />
