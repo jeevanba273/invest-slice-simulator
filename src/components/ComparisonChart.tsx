@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { DataPoint } from '@/utils/simulationUtils';
 
@@ -32,8 +31,6 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
     lumpSumValue: '',
     dcaValue: ''
   });
-  
-  // Removing cursorPosition state since we're removing the vertical line
   
   const drawChart = () => {
     const canvas = canvasRef.current;
@@ -188,8 +185,6 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
       ctx.stroke();
     }
     
-    // Removed the cursor position vertical line drawing code
-    
     const chartDimensions = {
       left: chartLeft,
       top: chartTop,
@@ -204,8 +199,6 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
       
       if (x >= chartLeft && x <= chartLeft + chartWidth &&
           y >= chartTop && y <= chartTop + chartHeight) {
-        
-        // We're no longer updating the cursor position state
         
         let minDistance = Infinity;
         let closestIndex = -1;
@@ -245,13 +238,11 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
           });
         }
       } else {
-        // No need to update cursor position anymore
         setTooltipData({ ...tooltipData, visible: false });
       }
     };
     
     canvas.onmouseleave = () => {
-      // No need to update cursor position anymore
       setTooltipData({ ...tooltipData, visible: false });
     };
     
@@ -343,23 +334,23 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
         
         {tooltipData.visible && (
           <div 
-            className="absolute z-10 bg-white shadow-lg rounded-lg p-2 text-xs pointer-events-none transform -translate-x-1/2 -translate-y-full"
+            className="absolute z-10 bg-white dark:bg-secondary/80 shadow-lg rounded-lg p-2 text-xs pointer-events-none transform -translate-x-1/2 -translate-y-full"
             style={{
               left: tooltipData.x,
               top: tooltipData.y
             }}
           >
-            <div className="font-semibold">{tooltipData.date}</div>
+            <div className="font-semibold text-black dark:text-white">{tooltipData.date}</div>
             {lumpSumEnabled && (
-              <div className="flex justify-between gap-3">
-                <span className="text-gray-500">Lump Sum:</span>
-                <span className="font-medium">{tooltipData.lumpSumValue}</span>
+              <div className="flex justify-between gap-3 text-gray-700 dark:text-white">
+                <span className="text-gray-500 dark:text-gray-300">Lump Sum:</span>
+                <span className="font-medium text-black dark:text-white">{tooltipData.lumpSumValue}</span>
               </div>
             )}
             {dcaEnabled && (
-              <div className="flex justify-between gap-3">
-                <span className="text-gray-500">DCA:</span>
-                <span className="font-medium">{tooltipData.dcaValue}</span>
+              <div className="flex justify-between gap-3 text-gray-700 dark:text-white">
+                <span className="text-gray-500 dark:text-gray-300">DCA:</span>
+                <span className="font-medium text-black dark:text-white">{tooltipData.dcaValue}</span>
               </div>
             )}
           </div>
