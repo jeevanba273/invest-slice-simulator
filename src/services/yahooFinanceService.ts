@@ -147,8 +147,9 @@ export const getSimulatedHistoricalData = (startDate: Date, endDate: Date): Hist
     // Skip weekends
     if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
       // Random daily change between -1.5% and 1.5% with slight upward bias
-      // to achieve approximately 12% CAGR over longer periods
-      const dailyChange = (random() * 3 - 1.3) / 100;
+      // Reduced upward bias to simulate more realistic market returns
+      // Around 10-12% annual returns for long periods
+      const dailyChange = (random() * 3 - 1.45) / 100;
       price = price * (1 + dailyChange);
       
       data.push({
