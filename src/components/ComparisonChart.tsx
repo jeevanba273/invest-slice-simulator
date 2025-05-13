@@ -79,6 +79,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
     const getX = (index: number) => chartLeft + (index / (data.length - 1)) * chartWidth;
     const getY = (value: number) => chartTop + chartHeight - ((value - minValue) / (maxValue - minValue)) * chartHeight;
     
+    // Draw chart axes
     ctx.strokeStyle = '#d1d5db';
     ctx.lineWidth = 1;
     
@@ -92,6 +93,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
     ctx.lineTo(chartLeft, chartTop + chartHeight);
     ctx.stroke();
     
+    // Draw Y-axis labels
     ctx.fillStyle = '#6b7280';
     ctx.font = '10px sans-serif';
     ctx.textAlign = 'right';
@@ -120,6 +122,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
       ctx.stroke();
     }
     
+    // Draw X-axis labels (years)
     ctx.fillStyle = '#6b7280';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
@@ -144,6 +147,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
       ctx.stroke();
     });
     
+    // Draw Lump Sum line
     if (lumpSumEnabled) {
       ctx.strokeStyle = '#0066cc';
       ctx.lineWidth = 2;
@@ -168,21 +172,22 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
       ctx.stroke();
     }
     
+    // Draw DCA line (only where values exist)
     if (dcaEnabled) {
       ctx.strokeStyle = '#e11d48';
       ctx.lineWidth = 2;
       ctx.beginPath();
       
-      let firstDataPointDrawn = false;
+      let firstPoint = true;
       
       data.forEach((point, index) => {
         if (point.dcaValue !== undefined && point.dcaValue !== null) {
           const x = getX(index);
           const y = getY(point.dcaValue);
           
-          if (!firstDataPointDrawn) {
+          if (firstPoint) {
             ctx.moveTo(x, y);
-            firstDataPointDrawn = true;
+            firstPoint = false;
           } else {
             ctx.lineTo(x, y);
           }
@@ -192,13 +197,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
       ctx.stroke();
     }
     
-    const chartDimensions = {
-      left: chartLeft,
-      top: chartTop,
-      width: chartWidth,
-      height: chartHeight
-    };
-    
+    // Configure mouse interaction for tooltips
     canvas.onmousemove = (e) => {
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -251,14 +250,14 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
                 month: 'short', 
                 day: 'numeric' 
               }),
-              lumpSumValue: new Intl.NumberFormat('en-IN', { 
+              lumpSumValue: hasLumpSumValue ? new Intl.NumberFormat('en-IN', { 
                 style: 'currency', 
                 currency: 'INR' 
-              }).format(point.lumpSumValue || 0),
-              dcaValue: new Intl.NumberFormat('en-IN', { 
+              }).format(point.lumpSumValue || 0) : "N/A",
+              dcaValue: hasDCAValue ? new Intl.NumberFormat('en-IN', { 
                 style: 'currency', 
                 currency: 'INR' 
-              }).format(point.dcaValue || 0)
+              }).format(point.dcaValue || 0) : "N/A"
             });
           } else {
             setTooltipData({ ...tooltipData, visible: false });
@@ -273,6 +272,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
       setTooltipData({ ...tooltipData, visible: false });
     };
     
+    // Handle click events for mobile compatibility
     canvas.onclick = (e) => {
       const rect = canvas.getBoundingClientRect();
       const x = (e.clientX - rect.left) * dpr;
@@ -322,14 +322,14 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
               month: 'short', 
               day: 'numeric' 
             }),
-            lumpSumValue: new Intl.NumberFormat('en-IN', { 
+            lumpSumValue: hasLumpSumValue ? new Intl.NumberFormat('en-IN', { 
               style: 'currency', 
               currency: 'INR' 
-            }).format(point.lumpSumValue || 0),
-            dcaValue: new Intl.NumberFormat('en-IN', { 
+            }).format(point.lumpSumValue || 0) : "N/A",
+            dcaValue: hasDCAValue ? new Intl.NumberFormat('en-IN', { 
               style: 'currency', 
               currency: 'INR' 
-            }).format(point.dcaValue || 0)
+            }).format(point.dcaValue || 0) : "N/A"
           });
         } else {
           setTooltipData({ ...tooltipData, visible: false });
@@ -388,13 +388,13 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
             }}
           >
             <div className="font-semibold text-black dark:text-white">{tooltipData.date}</div>
-            {lumpSumEnabled && (
+            {lumpSumEnabled && tooltipData.lumpSumValue !== "N/A" && (
               <div className="flex justify-between gap-3">
                 <span className="text-gray-500 dark:text-gray-300">Lump Sum:</span>
                 <span className="font-medium text-black dark:text-white">{tooltipData.lumpSumValue}</span>
               </div>
             )}
-            {dcaEnabled && tooltipData.dcaValue !== "₹0" && (
+            {dcaEnabled && tooltipData.dcaValue !== "N/A" && (
               <div className="flex justify-between gap-3">
                 <span className="text-gray-500 dark:text-gray-300">DCA:</span>
                 <span className="font-medium text-black dark:text-white">{tooltipData.dcaValue}</span>

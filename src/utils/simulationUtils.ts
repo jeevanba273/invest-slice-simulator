@@ -1,4 +1,3 @@
-
 // Data types
 import { fetchHistoricalData, getSimulatedHistoricalData } from '@/services/yahooFinanceService';
 
@@ -70,7 +69,6 @@ const simulateDCA = (
   
   // Track units accumulated and total investment made
   let accumulatedUnits = 0;
-  let totalInvested = 0;
   let firstInvestmentMade = false;
   
   // Create a map of investment dates for faster lookup
@@ -88,7 +86,6 @@ const simulateDCA = (
     if (investmentDateMap.has(dateKey)) {
       const unitsAcquired = dcaAmount / point.close;
       accumulatedUnits += unitsAcquired;
-      totalInvested += dcaAmount;
       firstInvestmentMade = true;
     }
     
