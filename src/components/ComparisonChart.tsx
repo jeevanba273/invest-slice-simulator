@@ -334,7 +334,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
         
         {tooltipData.visible && (
           <div 
-            className="absolute z-10 bg-white dark:bg-secondary/80 shadow-lg rounded-lg p-2 text-xs pointer-events-none transform -translate-x-1/2 -translate-y-full"
+            className="absolute z-10 bg-white dark:bg-gray-800/95 shadow-lg rounded-lg p-2 text-xs pointer-events-none transform -translate-x-1/2 -translate-y-full"
             style={{
               left: tooltipData.x,
               top: tooltipData.y
@@ -342,13 +342,13 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
           >
             <div className="font-semibold text-black dark:text-white">{tooltipData.date}</div>
             {lumpSumEnabled && (
-              <div className="flex justify-between gap-3 text-gray-700 dark:text-white">
+              <div className="flex justify-between gap-3">
                 <span className="text-gray-500 dark:text-gray-300">Lump Sum:</span>
                 <span className="font-medium text-black dark:text-white">{tooltipData.lumpSumValue}</span>
               </div>
             )}
             {dcaEnabled && (
-              <div className="flex justify-between gap-3 text-gray-700 dark:text-white">
+              <div className="flex justify-between gap-3">
                 <span className="text-gray-500 dark:text-gray-300">DCA:</span>
                 <span className="font-medium text-black dark:text-white">{tooltipData.dcaValue}</span>
               </div>

@@ -1,4 +1,3 @@
-
 // Data types
 import { fetchHistoricalData, getSimulatedHistoricalData } from '@/services/yahooFinanceService';
 
@@ -45,11 +44,17 @@ const normalizeData = (data: DataPoint[]): DataPoint[] => {
 
 // Simulate Lump Sum investing
 const simulateLumpSum = (data: DataPoint[], investmentAmount: number): DataPoint[] => {
+  if (data.length === 0) return [];
+  
   // For lump sum, invest all money on day one
-  // Value on any day = investment amount * (current price / initial price)
+  // The initial investment buys a fixed number of units at the initial price
+  // The value on any day = number of units * price on that day
+  const initialPrice = data[0].close;
+  const units = investmentAmount / initialPrice;
+  
   return data.map(point => ({
     ...point,
-    lumpSumValue: investmentAmount * (point.normalizedClose || 1)
+    lumpSumValue: units * point.close
   }));
 };
 
@@ -59,66 +64,43 @@ const simulateDCA = (
   dcaAmount: number, 
   frequency: 'monthly' | 'quarterly' | 'yearly'
 ): DataPoint[] => {
-  // Determine investment intervals based on frequency
-  let interval: number;
-  if (frequency === 'monthly') interval = 1;
-  else if (frequency === 'quarterly') interval = 3;
-  else interval = 12;
+  if (data.length === 0) return [];
   
-  // Organize data by year and month
-  const dataByMonth: { [key: string]: DataPoint } = {};
-  data.forEach(point => {
-    const year = point.date.getFullYear();
-    const month = point.date.getMonth();
-    const key = `${year}-${month}`;
-    
-    // Keep only the last trading day of each month
-    if (!dataByMonth[key] || point.date > dataByMonth[key].date) {
-      dataByMonth[key] = point;
-    }
-  });
+  // Determine investment dates based on frequency
+  const investmentDates = getInvestmentDates(data, frequency);
   
-  // Convert back to array and sort by date
-  const monthlyData = Object.values(dataByMonth).sort(
-    (a, b) => a.date.getTime() - b.date.getTime()
-  );
+  // Track units accumulated and total investment made
+  let accumulatedUnits = 0;
+  let totalInvested = 0;
   
-  // Filter based on frequency
-  const investmentDates: DataPoint[] = [];
-  for (let i = 0; i < monthlyData.length; i++) {
-    if (i % interval === 0) {
-      investmentDates.push(monthlyData[i]);
-    }
-  }
-
-  // Calculate DCA values
-  // For each investment period, calculate how many units were purchased
-  const investments: { units: number }[] = [];
-  
+  // Create a map of investment dates for faster lookup
+  const investmentDateMap = new Map();
   investmentDates.forEach(point => {
-    if (point.normalizedClose && point.normalizedClose > 0) {
-      // Units bought = amount / normalized price
-      // Since normalized price represents the relative price where initial price = 1
-      const unitsBought = dcaAmount / point.normalizedClose;
-      investments.push({ units: unitsBought });
-    }
+    const dateKey = point.date.toISOString().split('T')[0];
+    investmentDateMap.set(dateKey, true);
   });
   
-  return data.map(point => {
-    if (point.normalizedClose === undefined) return point;
+  // Process each data point in chronological order
+  const result = data.map(point => {
+    const dateKey = point.date.toISOString().split('T')[0];
     
-    // Calculate total units held
-    const totalUnits = investments.reduce((sum, inv) => sum + inv.units, 0);
+    // If this is an investment date, buy more units
+    if (investmentDateMap.has(dateKey)) {
+      const unitsAcquired = dcaAmount / point.close;
+      accumulatedUnits += unitsAcquired;
+      totalInvested += dcaAmount;
+    }
     
-    // Value = total units * normalized price
-    // This reflects how many units you own multiplied by their current normalized value
-    const totalValue = totalUnits * point.normalizedClose;
+    // Calculate the current value of all units held
+    const currentValue = accumulatedUnits * point.close;
     
     return {
       ...point,
-      dcaValue: totalValue
+      dcaValue: currentValue
     };
   });
+  
+  return result;
 };
 
 // Helper function to get investment dates
@@ -187,14 +169,11 @@ export const runSimulation = async (
       marketData = fallbackData;
     }
     
-    // First, normalize the data based on the first day's price
-    const normalizedData = normalizeData(marketData);
+    // Run Lump Sum simulation with the data
+    const lumpSumData = simulateLumpSum(marketData, lumpSumAmount);
     
-    // Run Lump Sum simulation with normalized data
-    let processedData = simulateLumpSum(normalizedData, lumpSumAmount);
-    
-    // Run DCA simulation with normalized data
-    processedData = simulateDCA(processedData, dcaAmount, frequency);
+    // Run DCA simulation with the data
+    const processedData = simulateDCA(lumpSumData, dcaAmount, frequency);
     
     // Calculate years for CAGR calculation
     const years = (processedData[processedData.length - 1].date.getTime() - processedData[0].date.getTime()) / (1000 * 60 * 60 * 24 * 365);
@@ -216,18 +195,9 @@ export const runSimulation = async (
     const initialPrice = processedData[0].close;
     const lumpSumUnits = lumpSumAmount / initialPrice;
     
-    // For DCA, calculate the total units
-    let dcaUnits = 0;
-    let totalInvestedAmount = 0;
-    
-    for (let i = 0; i < investmentDates.length; i++) {
-      const date = investmentDates[i];
-      if (date.normalizedClose && date.normalizedClose > 0) {
-        const unitsPurchased = dcaAmount / (initialPrice * date.normalizedClose);
-        dcaUnits += unitsPurchased;
-        totalInvestedAmount += dcaAmount;
-      }
-    }
+    // For DCA, calculate the total units by finding the last investment date
+    const lastDataPoint = processedData[processedData.length - 1];
+    const dcaUnits = lastDataPoint.dcaValue ? lastDataPoint.dcaValue / lastDataPoint.close : 0;
     
     return {
       data: processedData,
@@ -248,37 +218,35 @@ export const runSimulation = async (
     
     // Even if everything fails, return simulated data so the app doesn't break
     const backupData = getSimulatedHistoricalData(startDate, endDate);
-    const normalizedBackup = normalizeData(backupData);
-    const lumpSumSimulated = simulateLumpSum(normalizedBackup, lumpSumAmount);
-    const dcaSimulated = simulateDCA(lumpSumSimulated, dcaAmount, frequency);
+    
+    // Run simplified simulations on backup data
+    const lumpSumBackup = simulateLumpSum(backupData, lumpSumAmount);
+    const dcaBackup = simulateDCA(lumpSumBackup, dcaAmount, frequency);
     
     // Calculate some basic metrics from the simulated data
-    const years = (dcaSimulated[dcaSimulated.length - 1].date.getTime() - dcaSimulated[0].date.getTime()) / (1000 * 60 * 60 * 24 * 365);
+    const years = (dcaBackup[dcaBackup.length - 1].date.getTime() - dcaBackup[0].date.getTime()) / (1000 * 60 * 60 * 24 * 365);
     
     // Calculate proper CAGR for fallback data
-    const lumpSumFinalValue = dcaSimulated[dcaSimulated.length - 1].lumpSumValue || 0;
-    const dcaFinalValue = dcaSimulated[dcaSimulated.length - 1].dcaValue || 0;
-    const lumpSumCAGR = calculateCAGR(lumpSumAmount, lumpSumFinalValue, years);
+    const lumpSumFinalValue = dcaBackup[dcaBackup.length - 1].lumpSumValue || 0;
+    const dcaFinalValue = dcaBackup[dcaBackup.length - 1].dcaValue || 0;
     
-    // For DCA in fallback, calculate approximate investment dates
+    // For fallback, calculate approximate investment dates
     const approxTotalInvestments = Math.floor(years * (frequency === 'monthly' ? 12 : frequency === 'quarterly' ? 4 : 1));
     const totalDCAInvestment = dcaAmount * approxTotalInvestments;
+    
+    const lumpSumCAGR = calculateCAGR(lumpSumAmount, lumpSumFinalValue, years);
     const dcaCAGR = calculateCAGR(totalDCAInvestment, dcaFinalValue, years);
     
     // Calculate units for the backup data
-    const initialPrice = dcaSimulated[0].close;
+    const initialPrice = dcaBackup[0].close;
     const lumpSumUnits = lumpSumAmount / initialPrice;
     
-    // For DCA, approximate the units based on the average normalized price
-    let dcaUnits = 0;
-    for (let i = 0; i < approxTotalInvestments; i++) {
-      // Use a simple average normalized price for the approximation
-      const avgNormalizedPrice = 1 + (dcaSimulated[dcaSimulated.length - 1].normalizedClose || 1 - 1) / 2;
-      dcaUnits += dcaAmount / (initialPrice * avgNormalizedPrice);
-    }
+    // For DCA in fallback, approximate the units
+    const lastDataPoint = dcaBackup[dcaBackup.length - 1];
+    const dcaUnits = lastDataPoint.dcaValue ? lastDataPoint.dcaValue / lastDataPoint.close : 0;
     
     return {
-      data: dcaSimulated,
+      data: dcaBackup,
       lumpSum: {
         finalValue: lumpSumFinalValue,
         totalUnits: lumpSumUnits,
