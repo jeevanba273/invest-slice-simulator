@@ -1,3 +1,4 @@
+
 // Data types
 import { fetchHistoricalData, getSimulatedHistoricalData } from '@/services/yahooFinanceService';
 
@@ -47,8 +48,6 @@ const simulateLumpSum = (data: DataPoint[], investmentAmount: number): DataPoint
   if (data.length === 0) return [];
   
   // For lump sum, invest all money on day one
-  // The initial investment buys a fixed number of units at the initial price
-  // The value on any day = number of units * price on that day
   const initialPrice = data[0].close;
   const units = investmentAmount / initialPrice;
   
@@ -72,6 +71,7 @@ const simulateDCA = (
   // Track units accumulated and total investment made
   let accumulatedUnits = 0;
   let totalInvested = 0;
+  let firstInvestmentMade = false;
   
   // Create a map of investment dates for faster lookup
   const investmentDateMap = new Map();
@@ -89,6 +89,7 @@ const simulateDCA = (
       const unitsAcquired = dcaAmount / point.close;
       accumulatedUnits += unitsAcquired;
       totalInvested += dcaAmount;
+      firstInvestmentMade = true;
     }
     
     // Calculate the current value of all units held
@@ -96,7 +97,8 @@ const simulateDCA = (
     
     return {
       ...point,
-      dcaValue: currentValue
+      // Only show dcaValue after first investment is made
+      dcaValue: firstInvestmentMade ? currentValue : null
     };
   });
   
@@ -140,6 +142,44 @@ function getInvestmentDates(data: DataPoint[], frequency: 'monthly' | 'quarterly
   return investmentDates;
 }
 
+// Generate more realistic stock market data
+const generateRealisticMarketData = (startDate: Date, endDate: Date): DataPoint[] => {
+  // Average annual return for a market index like NIFTY 50 (around 12% annually)
+  const avgAnnualReturn = 0.12; 
+  const dailyReturn = Math.pow(1 + avgAnnualReturn, 1/252) - 1; // ~252 trading days
+  
+  // Volatility parameter (standard deviation of daily returns)
+  const dailyVolatility = 0.01; // 1% daily volatility which is realistic
+  
+  const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const data: DataPoint[] = [];
+  
+  // Start with a reasonable index value
+  let price = 1000;
+  
+  for (let i = 0; i < days; i++) {
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + i);
+    
+    // Skip weekends (simple approximation - not perfect)
+    const dayOfWeek = date.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) continue;
+    
+    // Random walk with drift model - common for stock price simulation
+    // Returns are log-normally distributed
+    const randomReturn = (Math.random() * 2 - 1) * dailyVolatility;
+    const dailyChange = dailyReturn + randomReturn;
+    price = price * (1 + dailyChange);
+    
+    data.push({
+      date: new Date(date),
+      close: price
+    });
+  }
+  
+  return data;
+};
+
 // Main simulation function
 export const runSimulation = async (
   lumpSumAmount: number,
@@ -150,7 +190,7 @@ export const runSimulation = async (
 ): Promise<SimulationResult> => {
   try {
     // Always get simulated data first so we have a fallback
-    const fallbackData = getSimulatedHistoricalData(startDate, endDate);
+    const fallbackData = generateRealisticMarketData(startDate, endDate);
     console.log(`Generated ${fallbackData.length} simulated data points as fallback`);
     
     // Try to get real data from Yahoo Finance API
@@ -217,7 +257,7 @@ export const runSimulation = async (
     console.error("Error in simulation:", error);
     
     // Even if everything fails, return simulated data so the app doesn't break
-    const backupData = getSimulatedHistoricalData(startDate, endDate);
+    const backupData = generateRealisticMarketData(startDate, endDate);
     
     // Run simplified simulations on backup data
     const lumpSumBackup = simulateLumpSum(backupData, lumpSumAmount);

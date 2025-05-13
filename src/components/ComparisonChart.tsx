@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { DataPoint } from '@/utils/simulationUtils';
 
@@ -60,7 +61,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
         minValue = Math.min(minValue, point.lumpSumValue);
         maxValue = Math.max(maxValue, point.lumpSumValue);
       }
-      if (dcaEnabled && point.dcaValue !== undefined) {
+      if (dcaEnabled && point.dcaValue !== undefined && point.dcaValue !== null) {
         minValue = Math.min(minValue, point.dcaValue);
         maxValue = Math.max(maxValue, point.dcaValue);
       }
@@ -148,13 +149,16 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
       ctx.lineWidth = 2;
       ctx.beginPath();
       
+      let firstDataPointDrawn = false;
+      
       data.forEach((point, index) => {
         if (point.lumpSumValue !== undefined) {
           const x = getX(index);
           const y = getY(point.lumpSumValue);
           
-          if (index === 0) {
+          if (!firstDataPointDrawn) {
             ctx.moveTo(x, y);
+            firstDataPointDrawn = true;
           } else {
             ctx.lineTo(x, y);
           }
@@ -169,13 +173,16 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
       ctx.lineWidth = 2;
       ctx.beginPath();
       
+      let firstDataPointDrawn = false;
+      
       data.forEach((point, index) => {
-        if (point.dcaValue !== undefined) {
+        if (point.dcaValue !== undefined && point.dcaValue !== null) {
           const x = getX(index);
           const y = getY(point.dcaValue);
           
-          if (index === 0) {
+          if (!firstDataPointDrawn) {
             ctx.moveTo(x, y);
+            firstDataPointDrawn = true;
           } else {
             ctx.lineTo(x, y);
           }
@@ -215,27 +222,47 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
         
         if (closestIndex !== -1) {
           const point = data[closestIndex];
-          setTooltipData({
-            visible: true,
-            x: getX(closestIndex),
-            y: Math.min(
-              getY(point.lumpSumValue || 0),
-              getY(point.dcaValue || 0)
-            ) - 10,
-            date: point.date.toLocaleDateString('en-IN', { 
-              year: 'numeric', 
-              month: 'short', 
-              day: 'numeric' 
-            }),
-            lumpSumValue: new Intl.NumberFormat('en-IN', { 
-              style: 'currency', 
-              currency: 'INR' 
-            }).format(point.lumpSumValue || 0),
-            dcaValue: new Intl.NumberFormat('en-IN', { 
-              style: 'currency', 
-              currency: 'INR' 
-            }).format(point.dcaValue || 0)
-          });
+          
+          // Only show tooltip for points where we have values
+          const hasLumpSumValue = lumpSumEnabled && point.lumpSumValue !== undefined;
+          const hasDCAValue = dcaEnabled && point.dcaValue !== undefined && point.dcaValue !== null;
+          
+          if (hasLumpSumValue || hasDCAValue) {
+            let tooltipY = y - 10;
+            
+            // If we have both values, get the higher one for tooltip positioning
+            if (hasLumpSumValue && hasDCAValue) {
+              tooltipY = Math.min(
+                getY(point.lumpSumValue!),
+                getY(point.dcaValue!)
+              ) - 10;
+            } else if (hasLumpSumValue) {
+              tooltipY = getY(point.lumpSumValue!) - 10;
+            } else if (hasDCAValue) {
+              tooltipY = getY(point.dcaValue!) - 10;
+            }
+            
+            setTooltipData({
+              visible: true,
+              x: getX(closestIndex),
+              y: tooltipY,
+              date: point.date.toLocaleDateString('en-IN', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+              }),
+              lumpSumValue: new Intl.NumberFormat('en-IN', { 
+                style: 'currency', 
+                currency: 'INR' 
+              }).format(point.lumpSumValue || 0),
+              dcaValue: new Intl.NumberFormat('en-IN', { 
+                style: 'currency', 
+                currency: 'INR' 
+              }).format(point.dcaValue || 0)
+            });
+          } else {
+            setTooltipData({ ...tooltipData, visible: false });
+          }
         }
       } else {
         setTooltipData({ ...tooltipData, visible: false });
@@ -266,27 +293,47 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
       
       if (closestIndex !== -1 && minDistance < 50) {
         const point = data[closestIndex];
-        setTooltipData({
-          visible: true,
-          x: getX(closestIndex),
-          y: Math.min(
-            getY(point.lumpSumValue || 0),
-            getY(point.dcaValue || 0)
-          ) - 10,
-          date: point.date.toLocaleDateString('en-IN', { 
-            year: 'numeric', 
-            month: 'short', 
-            day: 'numeric' 
-          }),
-          lumpSumValue: new Intl.NumberFormat('en-IN', { 
-            style: 'currency', 
-            currency: 'INR' 
-          }).format(point.lumpSumValue || 0),
-          dcaValue: new Intl.NumberFormat('en-IN', { 
-            style: 'currency', 
-            currency: 'INR' 
-          }).format(point.dcaValue || 0)
-        });
+        
+        // Only show tooltip for points where we have values
+        const hasLumpSumValue = lumpSumEnabled && point.lumpSumValue !== undefined;
+        const hasDCAValue = dcaEnabled && point.dcaValue !== undefined && point.dcaValue !== null;
+        
+        if (hasLumpSumValue || hasDCAValue) {
+          let tooltipY = chartTop;
+          
+          // If we have both values, get the higher one for tooltip positioning
+          if (hasLumpSumValue && hasDCAValue) {
+            tooltipY = Math.min(
+              getY(point.lumpSumValue!),
+              getY(point.dcaValue!)
+            ) - 10;
+          } else if (hasLumpSumValue) {
+            tooltipY = getY(point.lumpSumValue!) - 10;
+          } else if (hasDCAValue) {
+            tooltipY = getY(point.dcaValue!) - 10;
+          }
+          
+          setTooltipData({
+            visible: true,
+            x: getX(closestIndex),
+            y: tooltipY,
+            date: point.date.toLocaleDateString('en-IN', { 
+              year: 'numeric', 
+              month: 'short', 
+              day: 'numeric' 
+            }),
+            lumpSumValue: new Intl.NumberFormat('en-IN', { 
+              style: 'currency', 
+              currency: 'INR' 
+            }).format(point.lumpSumValue || 0),
+            dcaValue: new Intl.NumberFormat('en-IN', { 
+              style: 'currency', 
+              currency: 'INR' 
+            }).format(point.dcaValue || 0)
+          });
+        } else {
+          setTooltipData({ ...tooltipData, visible: false });
+        }
       } else {
         setTooltipData({ ...tooltipData, visible: false });
       }
@@ -347,7 +394,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({
                 <span className="font-medium text-black dark:text-white">{tooltipData.lumpSumValue}</span>
               </div>
             )}
-            {dcaEnabled && (
+            {dcaEnabled && tooltipData.dcaValue !== "₹0" && (
               <div className="flex justify-between gap-3">
                 <span className="text-gray-500 dark:text-gray-300">DCA:</span>
                 <span className="font-medium text-black dark:text-white">{tooltipData.dcaValue}</span>
