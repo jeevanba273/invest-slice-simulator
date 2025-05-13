@@ -1,10 +1,10 @@
-
 // Data types
 import { fetchHistoricalData, getSimulatedHistoricalData } from '@/services/yahooFinanceService';
 
 export interface DataPoint {
   date: Date;
   close: number;
+  normalizedClose?: number;
   lumpSumValue?: number;
   dcaValue?: number;
 }
@@ -30,21 +30,32 @@ const calculateCAGR = (initialValue: number, finalValue: number, years: number):
   return (Math.pow(finalValue / initialValue, 1 / years) - 1) * 100;
 };
 
-// Simulate Lump Sum investing
-const simulateLumpSum = (data: DataPoint[], investmentAmount: number): DataPoint[] => {
+// Normalize data relative to the first day's price
+const normalizeData = (data: DataPoint[]): DataPoint[] => {
+  if (data.length === 0) return [];
+  
   const initialPrice = data[0].close;
-  const units = investmentAmount / initialPrice;
   
   return data.map(point => ({
     ...point,
-    lumpSumValue: point.close * units
+    normalizedClose: point.close / initialPrice
+  }));
+};
+
+// Simulate Lump Sum investing
+const simulateLumpSum = (data: DataPoint[], investmentAmount: number): DataPoint[] => {
+  // For lump sum, invest all money on day one
+  // Value on any day = investment amount * normalized price (which represents growth factor)
+  return data.map(point => ({
+    ...point,
+    lumpSumValue: investmentAmount * (point.normalizedClose || 1)
   }));
 };
 
 // Simulate Dollar-Cost Averaging (DCA)
 const simulateDCA = (
   data: DataPoint[], 
-  dcaAmount: number, // Fixed amount invested each period
+  dcaAmount: number, 
   frequency: 'monthly' | 'quarterly' | 'yearly'
 ): DataPoint[] => {
   // Determine investment intervals based on frequency
@@ -78,35 +89,37 @@ const simulateDCA = (
       investmentDates.push(monthlyData[i]);
     }
   }
-  
-  // Simulate DCA investment using the fixed dcaAmount each period
-  let totalUnits = 0;
-  const resultMap = new Map<string, number>();
+
+  // Calculate DCA values
+  // For each investment period, calculate how many "units" were bought
+  // and track their growth using normalized prices
+  const investments: { date: Date; amount: number; normalizedPrice: number }[] = [];
   
   investmentDates.forEach(point => {
-    const unitsAcquired = dcaAmount / point.close;
-    totalUnits += unitsAcquired;
-    
-    // Set portfolio value for this date and all future dates
-    const dateKey = point.date.toISOString();
-    resultMap.set(dateKey, totalUnits);
+    if (point.normalizedClose) {
+      investments.push({
+        date: point.date,
+        amount: dcaAmount,
+        normalizedPrice: point.normalizedClose
+      });
+    }
   });
   
-  // Apply portfolio values to all data points
   return data.map(point => {
-    const dateKey = point.date.toISOString();
-    let accumulatedUnits = 0;
+    let totalValue = 0;
     
-    // Find the most recent investment date
-    for (const [investDate, units] of resultMap.entries()) {
-      if (investDate <= dateKey) {
-        accumulatedUnits = units;
+    // Sum up the current value of each investment made before this point
+    investments.forEach(inv => {
+      if (inv.date <= point.date && point.normalizedClose !== undefined) {
+        // Value = investment amount * (current normalized price / purchase normalized price)
+        const currentValue = inv.amount * (point.normalizedClose / inv.normalizedPrice);
+        totalValue += currentValue;
       }
-    }
+    });
     
     return {
       ...point,
-      dcaValue: accumulatedUnits * point.close
+      dcaValue: totalValue
     };
   });
 };
@@ -177,21 +190,24 @@ export const runSimulation = async (
       marketData = fallbackData;
     }
     
-    // Run Lump Sum simulation
-    let processedData = simulateLumpSum(marketData, lumpSumAmount);
+    // First, normalize the data based on the first day's price
+    const normalizedData = normalizeData(marketData);
     
-    // Run DCA simulation
+    // Run Lump Sum simulation with normalized data
+    let processedData = simulateLumpSum(normalizedData, lumpSumAmount);
+    
+    // Run DCA simulation with normalized data
     processedData = simulateDCA(processedData, dcaAmount, frequency);
     
-    // Calculate performance metrics
-    const initialLumpSumValue = lumpSumAmount;
-    
+    // Calculate years for CAGR calculation
     const years = (processedData[processedData.length - 1].date.getTime() - processedData[0].date.getTime()) / (1000 * 60 * 60 * 24 * 365);
     
+    // Get final values
     const lumpSumFinalValue = processedData[processedData.length - 1].lumpSumValue || 0;
     const dcaFinalValue = processedData[processedData.length - 1].dcaValue || 0;
     
-    const lumpSumCAGR = calculateCAGR(initialLumpSumValue, lumpSumFinalValue, years);
+    // Calculate CAGR for lump sum
+    const lumpSumCAGR = calculateCAGR(lumpSumAmount, lumpSumFinalValue, years);
     
     // For DCA, calculate the total amount invested
     const investmentDates = getInvestmentDates(processedData, frequency);
@@ -201,16 +217,26 @@ export const runSimulation = async (
     // Calculate proper CAGR for DCA using total amount invested
     const dcaCAGR = calculateCAGR(totalDCAInvestment, dcaFinalValue, years);
     
-    const lumpSumUnits = lumpSumAmount / processedData[0].close;
+    // Calculate units - for normalized data, units are equivalent to investment amount
+    // since we're treating the initial price as 1.0
+    const lumpSumUnits = lumpSumAmount;
+    const initialPrice = processedData[0].close;
     
-    // Calculate total DCA units based on final value and closing price
-    const dcaUnits = dcaFinalValue / processedData[processedData.length - 1].close;
+    // For DCA, calculate total units based on each investment
+    let dcaUnits = 0;
+    investmentDates.forEach((date, index) => {
+      if (index < totalInvestments) {
+        // Units purchased at each point = Amount / (Initial price * normalized price at that point)
+        const normalizedPrice = date.normalizedClose || 1;
+        dcaUnits += dcaAmount / (initialPrice * normalizedPrice);
+      }
+    });
     
     return {
       data: processedData,
       lumpSum: {
         finalValue: lumpSumFinalValue,
-        totalUnits: lumpSumUnits,
+        totalUnits: lumpSumAmount / initialPrice,
         cagr: lumpSumCAGR
       },
       dca: {
@@ -225,7 +251,8 @@ export const runSimulation = async (
     
     // Even if everything fails, return simulated data so the app doesn't break
     const backupData = getSimulatedHistoricalData(startDate, endDate);
-    const lumpSumSimulated = simulateLumpSum(backupData, lumpSumAmount);
+    const normalizedBackup = normalizeData(backupData);
+    const lumpSumSimulated = simulateLumpSum(normalizedBackup, lumpSumAmount);
     const dcaSimulated = simulateDCA(lumpSumSimulated, dcaAmount, frequency);
     
     // Calculate some basic metrics from the simulated data
@@ -241,16 +268,18 @@ export const runSimulation = async (
     const totalDCAInvestment = dcaAmount * approxTotalInvestments;
     const dcaCAGR = calculateCAGR(totalDCAInvestment, dcaFinalValue, years);
     
+    // Calculate units
+    const initialPrice = dcaSimulated[0].close;
     return {
       data: dcaSimulated,
       lumpSum: {
         finalValue: lumpSumFinalValue,
-        totalUnits: lumpSumAmount / dcaSimulated[0].close,
+        totalUnits: lumpSumAmount / initialPrice,
         cagr: lumpSumCAGR
       },
       dca: {
         finalValue: dcaFinalValue,
-        totalUnits: dcaFinalValue / dcaSimulated[dcaSimulated.length - 1].close,
+        totalUnits: dcaFinalValue / (initialPrice * (dcaSimulated[dcaSimulated.length - 1].normalizedClose || 1)),
         cagr: dcaCAGR,
         periodicAmount: dcaAmount
       }
